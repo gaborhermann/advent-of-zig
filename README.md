@@ -7,6 +7,6 @@
 Put the `input` file in the same directory as the code then compile and run it, e.g.:
 
 ```sh
-cd day01_part1
-zig run day01_part1.zig
+cd day01
+zig run part1.zig
 ```
