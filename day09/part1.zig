@@ -33,39 +33,77 @@ pub fn main() !void {
         }
     }
 
-    // indexed: map[y * x_len + x]
-    const map = map_list.items;
-    const y_len: u64 = map.len / x_len;
+    const y_len: u64 = map_list.items.len / x_len;
+    const map = Map{ .x_len = x_len, .y_len = y_len, .map = map_list.items };
 
     var total: u64 = 0;
     var y: u32 = 0;
     while (y < y_len) : (y += 1) {
         var x: u32 = 0;
         while (x < x_len) : (x += 1) {
-            const height = map[y * x_len + x];
-            const risk_level: u64 = blk: {
-                // x - 1, y
-                if (x > 0) if (height >= map[y * x_len + (x - 1)]) {
-                    break :blk 0;
-                };
-                // x + 1, y
-                if (x + 1 < x_len) if (height >= map[y * x_len + (x + 1)]) {
-                    break :blk 0;
-                };
-                // x, y - 1
-                if (y > 0) if (height >= map[(y - 1) * x_len + x]) {
-                    break :blk 0;
-                };
-                // x, y + 1
-                if (y + 1 < y_len) if (height >= map[(y + 1) * x_len + x]) {
-                    break :blk 0;
-                };
-                break :blk height + 1;
-            };
-            total += risk_level;
+            if (map.higher_neighbors(x, y).len == map.neighbors(x, y).len) {
+                total += map.get(x, y) + 1;
+            }
         }
     }
 
     const stdout = std.io.getStdOut().writer();
     try stdout.print("{d}\n", .{total});
 }
+
+const Map = struct {
+    x_len: u64,
+    y_len: u64,
+    map: []u8,
+
+    fn get(self: Map, x: u32, y: u32) u8 {
+        return self.map[y * self.x_len + x];
+    }
+
+    fn higher_neighbors(self: Map, x: u32, y: u32) []Point {
+        var len: u8 = 0;
+        var hns: [4]Point = undefined;
+
+        const ns = self.neighbors(x, y);
+        const height = self.get(x, y);
+        for (ns) |n| if (height < self.get(n.x, n.y)) {
+            hns[len] = n;
+            len += 1;
+        };
+
+        return hns[0..len];
+    }
+
+    fn neighbors(self: Map, x: u32, y: u32) []Point {
+        var len: u8 = 0;
+        var ns: [4]Point = undefined;
+
+        // x - 1, y
+        if (x > 0) {
+            ns[len] = Point{ .x = x - 1, .y = y };
+            len += 1;
+        }
+        // x + 1, y
+        if (x + 1 < self.x_len) {
+            ns[len] = Point{ .x = x + 1, .y = y };
+            len += 1;
+        }
+        // x, y - 1
+        if (y > 0) {
+            ns[len] = Point{ .x = x, .y = y - 1 };
+            len += 1;
+        }
+        // x, y + 1
+        if (y + 1 < self.y_len) {
+            ns[len] = Point{ .x = x, .y = y + 1 };
+            len += 1;
+        }
+
+        return ns[0..len];
+    }
+};
+
+const Point = struct {
+    x: u32,
+    y: u32,
+};
