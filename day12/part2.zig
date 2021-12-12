@@ -68,11 +68,17 @@ pub fn main() !void {
     try stack.append(NextCave{ .id = 0, .n_idx = 0 });
     been_to.set(0);
 
+    var double_visited: ?u32 = null;
+
     while (stack.items.len != 0) {
         const v = stack.pop();
         const ns = neighbors.items[v.id];
         if (v.n_idx >= ns.items.len) {
-            been_to.unset(v.id);
+            if (double_visited == v.id) {
+                double_visited = null;
+            } else {
+                been_to.unset(v.id);
+            }
             continue;
         }
 
@@ -88,6 +94,9 @@ pub fn main() !void {
             if (is_small_cave.isSet(n)) {
                 been_to.set(n);
             }
+        } else if (double_visited == null and n != 0 and n != 1) {
+            try stack.append(NextCave{ .id = n, .n_idx = 0 });
+            double_visited = n;
         }
     }
 
