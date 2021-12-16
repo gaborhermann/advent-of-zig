@@ -51,10 +51,11 @@ const Packet = struct {
 
     fn deinit(self: *Packet, allocator: *std.mem.Allocator) void {
         if (self.type != 4) {
-            // TODO fix deinit
-            // for (self.payload.operator.items) |packet| {
-            //     packet.deinit(allocator);
-            // }
+            var op: [*]Packet = self.payload.operator.items.ptr;
+            var i: u32 = 0;
+            while (i < self.payload.operator.items.len) : (i += 1) {
+                op[i].deinit(allocator);
+            }
             self.payload.operator.deinit(allocator);
         }
     }
